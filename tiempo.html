@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estimación del Tiempo de Entrega</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Estimación del Tiempo de Entrega</h1>
+    <form id="predictionForm">
+        <label for="data">Ingresa los datos para la predicción (en formato JSON):</label>
+        <input type="text" id="data" placeholder='[{"feature1": 10, "feature2": 2, "feature3": 60}]'>
+        <button type="submit">Enviar</button>
+    </form>
+    <div class="response" id="response"></div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const inputData = document.getElementById('data').value;
+            const responseDiv = document.getElementById('response');
+
+            try {
+                // Validar que los datos sean un JSON válido antes de enviarlos
+                JSON.parse(inputData);
+
+                const response = await fetch('http://127.0.0.1:5001/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: inputData,
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    responseDiv.innerHTML = `<p style="color: red;">Error: ${errorData.error || "No se pudo procesar la solicitud."}</p>`;
+                } else {
+                    const result = await response.json();
+                    responseDiv.innerHTML = `<p>Predicciones: ${JSON.stringify(result.predictions)}</p>`;
+                }
+            } catch (error) {
+                if (error instanceof SyntaxError) {
+                    responseDiv.innerHTML = `<p style="color: red;">Error: El formato JSON no es válido.</p>`;
+                } else {
+                    responseDiv.innerHTML = `<p style="color: red;">Error al conectar con el servidor: ${error.message}</p>`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
